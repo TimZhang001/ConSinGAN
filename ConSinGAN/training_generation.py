@@ -30,14 +30,14 @@ def train(opt):
     noise_amp = []
 
     for scale_num in range(opt.stop_scale+1):
-        opt.out_ = functions.generate_dir2save(opt)
+        opt.out_ = functions.generate_dir2save_mvtec(opt)
         opt.outf = '%s/%d' % (opt.out_,scale_num)
         try:
             os.makedirs(opt.outf)
         except OSError:
                 print(OSError)
                 pass
-        functions.save_image('{}/real_scale.jpg'.format(opt.outf), reals[scale_num])
+        functions.save_image('{}/real_scale.png'.format(opt.outf), reals[scale_num])
 
         d_curr = init_D(opt)
         if scale_num > 0:
@@ -188,8 +188,8 @@ def train_single_scale(netD, netG, reals, fixed_noise, noise_amp, opt, depth, wr
             writer.add_scalar('Loss/train/G/gen', errG.item(), iter+1)
             writer.add_scalar('Loss/train/G/reconstruction', rec_loss.item(), iter+1)
         if iter % 500 == 0 or iter+1 == opt.niter:
-            functions.save_image('{}/fake_sample_{}.jpg'.format(opt.outf, iter+1), fake.detach())
-            functions.save_image('{}/reconstruction_{}.jpg'.format(opt.outf, iter+1), rec.detach())
+            functions.save_image('{}/fake_sample_{}.png'.format(opt.outf, iter+1), fake.detach())
+            functions.save_image('{}/reconstruction_{}.png'.format(opt.outf, iter+1), rec.detach())
             generate_samples(netG, opt, depth, noise_amp, writer, reals, iter+1)
 
         schedulerD.step()
@@ -201,7 +201,7 @@ def train_single_scale(netD, netG, reals, fixed_noise, noise_amp, opt, depth, wr
 
 
 def generate_samples(netG, opt, depth, noise_amp, writer, reals, iter, n=25):
-    opt.out_ = functions.generate_dir2save(opt)
+    opt.out_ = functions.generate_dir2save_mvtec(opt)
     dir2save = '{}/gen_samples_stage_{}'.format(opt.out_, depth)
     reals_shapes = [r.shape for r in reals]
     all_images = []
@@ -214,7 +214,7 @@ def generate_samples(netG, opt, depth, noise_amp, writer, reals, iter, n=25):
             noise = functions.sample_random_noise(depth, reals_shapes, opt)
             sample = netG(noise, reals_shapes, noise_amp)
             all_images.append(sample)
-            functions.save_image('{}/gen_sample_{}.jpg'.format(dir2save, idx), sample.detach())
+            functions.save_image('{}/gen_sample_{}.png'.format(dir2save, idx), sample.detach())
 
         all_images = torch.cat(all_images, 0)
         all_images[0] = reals[depth].squeeze()

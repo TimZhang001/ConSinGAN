@@ -17,7 +17,7 @@ def get_arguments():
     parser.add_argument('--nc_im',type=int,help='image # channels',default=3)
     parser.add_argument('--noise_amp',type=float,help='additive noise cont weight',default=0.1)
     parser.add_argument('--min_size',type=int,help='image minimal size at the coarser scale',default=25)
-    parser.add_argument('--max_size', type=int,help='image minimal size at the coarser scale', default=250)
+    parser.add_argument('--max_size', type=int,help='image minimal size at the coarser scale', default=256)
     parser.add_argument('--train_depth', type=int, help='how many layers are trained if growing', default=3)
     parser.add_argument('--start_scale', type=int, help='at which stage to start training', default=0)
 

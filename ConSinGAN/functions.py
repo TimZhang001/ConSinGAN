@@ -16,7 +16,8 @@ from albumentations import HueSaturationValue, IAAAdditiveGaussianNoise, GaussNo
     Compose, MultiplicativeNoise, ToSepia, ChannelDropout, ChannelShuffle, Cutout, InvertImg
 
 from ConSinGAN.imresize import imresize, imresize_in, imresize_to_shape
-
+from PIL import Image
+from torchvision import transforms
 
 def denorm(x):
     out = (x + 1) / 2
@@ -126,14 +127,28 @@ def calc_gradient_penalty(netD, real_data, fake_data, LAMBDA, device):
 
 
 def read_image(opt):
-    x = img.imread('%s' % (opt.input_name))
+    #x = img.imread('%s' % (opt.input_name))
+
+    # open image
+    x = Image.open('%s' % (opt.input_name)).convert('RGB')
+    x = transforms.Resize(256)(x)
+    # Image -> numpy array
+    x = np.asarray(x)
+
     x = np2torch(x,opt)
     x = x[:,0:3,:,:]
     return x
 
 
 def read_image_dir(dir, opt):
-    x = img.imread(dir)
+    #x = img.imread(dir)
+
+    # open image
+    x = Image.open('%s' % (opt.input_name)).convert('RGB')
+    x = transforms.Resize(256)(x)
+    # Image -> numpy array
+    x = np.asarray(x)
+
     x = np2torch(x,opt)
     x = x[:,0:3,:,:]
     return x
@@ -165,10 +180,17 @@ def torch2uint8(x):
 
 
 def read_image2np(opt):
-    x = img.imread('%s' % (opt.input_name))
+    # x = img.imread('%s' % (opt.input_name))
+
+    # open image
+    x = Image.open('%s' % (opt.input_name)).convert('RGB')
+    x = transforms.Resize(448)(x)
+    # Image -> numpy array
+    x = np.asarray(x)
+
     x = x[:, :, 0:3]
     return x
-
+ 
 
 def save_networks(netG, netDs ,z, opt):
     torch.save(netG.state_dict(), '%s/netG.pth' % (opt.outf))
@@ -208,7 +230,7 @@ def create_reals_pyramid(real, opt):
 
 
 def load_trained_model(opt):
-    dir = generate_dir2save(opt)
+    dir = generate_dir2save_mvtec(opt)
 
     if os.path.exists(dir):
         Gs = torch.load('%s/Gs.pth' % dir, map_location="cuda:{}".format(torch.cuda.current_device()))
@@ -235,6 +257,11 @@ def generate_dir2save(opt):
     dir2save += "_act_" + opt.activation
     if opt.activation == "lrelu":
         dir2save += "_" + str(opt.lrelu_alpha)
+
+    return dir2save
+
+def generate_dir2save_mvtec(opt):
+    dir2save = 'mvtecAD/{}/{}'.format(opt.target, opt.subtarget)
 
     return dir2save
 
