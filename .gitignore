@@ -131,3 +131,6 @@ dmypy.json
 
 TrainedModels/
 mvtecAD/
+TestIMG1/
+TestIMG/
+SIFID/

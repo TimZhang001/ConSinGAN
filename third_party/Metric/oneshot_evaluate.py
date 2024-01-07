@@ -15,16 +15,18 @@ import torch
 from PIL import Image
 from torchvision.transforms import ToTensor
 from OneShotMetrics import SIFID, LPIPS, LPIPS_to_train, mIoU
+from OneShotMetrics.LPIPS.models import PerceptualLoss
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 def parser_param():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root_path',        type=str,  default='/home/zhangss/PHDPaper/04_SinDDM/results/hazelnut/print/single_image')
+    parser.add_argument('--root_path',        type=str,  default='/home/zhangss/PHDPaper/06_ConSinGAN/mvtecAD/carpet/color')
     parser.add_argument('--sifid_all_layers', type=bool, default=False)
-    parser.add_argument('--real_path',        type=str,  default="/home/zhangss/PHDPaper/04_SinDDM/results/hazelnut/print/single_image/sample_true")
-    parser.add_argument('--fake_path',        type=str,  default="/home/zhangss/PHDPaper/04_SinDDM/results/hazelnut/print/single_image/sample_eval")
+    parser.add_argument('--real_path',        type=str,  default="/home/zhangss/PHDPaper/06_ConSinGAN/mvtecAD/carpet/color/sample_true/image")
+    parser.add_argument('--fake_path',        type=str,  default="/home/zhangss/PHDPaper/06_ConSinGAN/mvtecAD/carpet/color/sample_eval/image")
+    parser.add_argument('--gpu_id',           type=int,  default=1)
     args = parser.parse_args()
 
     return args
@@ -54,8 +56,11 @@ def get_image_names(args):
     names_fake_image = sorted(os.listdir(path_feak_images))
     list_fake_image  = list()
     for i in range(len(names_fake_image)):
-        im_path          = os.path.join(path_feak_images, names_fake_image[i])
-        im               = (Image.open(im_path).convert("RGB"))
+        im_path = os.path.join(path_feak_images, names_fake_image[i])
+        if im_path.endswith("resize.png"):
+            continue
+
+        im = (Image.open(im_path).convert("RGB"))
         list_fake_image += [im]
 
     names_real_image = sorted(os.listdir(path_real_images))
@@ -63,10 +68,43 @@ def get_image_names(args):
     im_res = (ToTensor()(list_fake_image[0]).shape[2], ToTensor()(list_fake_image[0]).shape[1])
     print("fake im_res: ", im_res)
     for i in range(len(names_real_image)):
-        im_path          = os.path.join(path_real_images, names_real_image[i])
-        im               = (Image.open(im_path).convert("RGB"))
-        print("true im_res: ", im.size)
-        list_real_image += [im.resize(im_res, Image.Resampling.LANCZOS)]
+        im_path = os.path.join(path_real_images, names_real_image[i])
+        im      = (Image.open(im_path).convert("RGB"))
+        
+        if im_path.endswith("resize.png"):
+            continue         
+        
+        im_resize = im.resize(im_res, Image.Resampling.BILINEAR)
+        save_path = im_path.replace(".png", "BILINEAR_resize.png")
+        im_resize.save(save_path)
+        list_real_image += [im_resize]
+
+        im_resize = im.resize(im_res, Image.Resampling.HAMMING)
+        save_path = im_path.replace(".png", "HAMMING_resize.png")
+        im_resize.save(save_path)
+        list_real_image += [im_resize]
+
+        im_resize = im.resize(im_res, Image.Resampling.BOX)
+        save_path = im_path.replace(".png", "BOX_resize.png")
+        im_resize.save(save_path)
+        list_real_image += [im_resize]
+
+        im_resize = im.resize(im_res, Image.Resampling.LANCZOS)
+        save_path = im_path.replace(".png", "LANCZOS_resize.png")
+        im_resize.save(save_path)
+        list_real_image += [im_resize]
+
+        im_resize = im.resize(im_res, Image.Resampling.BICUBIC)
+        save_path = im_path.replace(".png", "BICUBIC_resize.png")
+        im_resize.save(save_path)
+        list_real_image += [im_resize]
+
+        im_resize = im.resize(im_res, Image.Resampling.NEAREST)
+        save_path = im_path.replace(".png", "NEAREST_resize.png")
+        im_resize.save(save_path)
+        list_real_image += [im_resize]
+        
+        print("real im_res: ", im.size)
 
     return names_real_image, names_fake_image, list_real_image, list_fake_image, im_res
 
@@ -164,13 +202,14 @@ if __name__ == "__main__":
     # --- Compute the metrics --- #
     with torch.no_grad():
         # 计算FID(多张图像)或者SIFID(单张图像) 值越小代表真实性越高
-        sifid1, sifid2, sifid3, sifid4 = SIFID(list_real_image, list_fake_image, args.sifid_all_layers)
+        sifid1, sifid2, sifid3, sifid4 = SIFID(list_real_image, list_fake_image, args.sifid_all_layers, args.gpu_id)
         
         # 计算生成样本的LPIPS，值越大代表样本多样性越高
-        lpips                          = LPIPS(list_fake_image)
+        p_model                        = PerceptualLoss(model='net-lin', net='alex', use_gpu=True, gpu_ids=[args.gpu_id])
+        lpips                          = LPIPS(list_fake_image, p_model)
         
         # 统计每张生成的样本距离训练集的距离（可能有多张样本），值越小代表样本真实性越高
-        dist_to_tr, dist_to_tr_byimage = LPIPS_to_train(list_real_image, list_fake_image, names_fake_image)
+        dist_to_tr, dist_to_tr_byimage = LPIPS_to_train(list_real_image, list_fake_image, names_fake_image, p_model)
 
     # --- Save the metrics under .${exp_name}/metrics --- #
     save_fld = os.path.join(args.root_path, "metrics")
