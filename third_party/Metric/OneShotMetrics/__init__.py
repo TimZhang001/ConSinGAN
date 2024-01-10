@@ -91,8 +91,8 @@ def LPIPS_to_train(list_real_image, list_fake_image, names_fake_image, p_model):
         ans1  += cur_min
         count += 1
 
-        if count % 500 == 0:
-            print(count)
+        #if count % 500 == 0:
+        #    print(count)
     ans = ans1 / count
     return ans, dist_to_real_dict
 

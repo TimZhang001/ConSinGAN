@@ -41,7 +41,7 @@ for category in $categories; do
         cp "${src_paths}" "${real_paths}"
 
         # 调用处理脚本进行训练
-        python third_party/Metric/oneshot_evaluate.py --root_path "${root_paths}" --real_path "${real_paths}" --fake_path "${fake_paths}"
+        python third_party/Metric/oneshot_evaluate.py --root_path "${root_paths}" --real_path "${real_paths}" --fake_path "${fake_paths}" --gpu_id 1
 
     done
 
