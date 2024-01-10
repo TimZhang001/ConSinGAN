@@ -343,11 +343,11 @@ if __name__ == "__main__":
         sifid1, sifid2, sifid3, sifid4 = SIFID(list_real_image, list_fake_image, args.sifid_all_layers, args.gpu_id)
         
         # 计算生成样本的LPIPS，值越大代表样本多样性越高
-        #p_model                        = PerceptualLoss(model='net-lin', net='alex', use_gpu=True, gpu_ids=[args.gpu_id])
-        #lpips                          = LPIPS(list_fake_image, p_model)
+        p_model                        = PerceptualLoss(model='net-lin', net='alex', use_gpu=True, gpu_ids=[args.gpu_id])
+        lpips                          = LPIPS(list_fake_image, p_model)
         
         # 统计每张生成的样本距离训练集的距离（可能有多张样本），值越小代表样本真实性越高
-        #dist_to_tr, dist_to_tr_byimage = LPIPS_to_train(list_real_image, list_fake_image, names_fake_image, p_model)
+        dist_to_tr, dist_to_tr_byimage = LPIPS_to_train(list_real_image, list_fake_image, names_fake_image, p_model)
 
         # 计算no-reference IQA，niqe \ musiq \ nima
         niqe_list, musiq_list          = cal_no_reference_metric(list_fake_image)
@@ -363,7 +363,7 @@ if __name__ == "__main__":
     write_fid_to_file(save_fld, names_fake_image, fid1, fid2, fid3, fid4)
 
     # ----------------------------------------------------------------------------
-    #write_lpips_to_file(save_fld, lpips.cpu(), dist_to_tr.cpu(), dist_to_tr_byimage, pixel_div)
+    write_lpips_to_file(save_fld, lpips.cpu(), dist_to_tr.cpu(), dist_to_tr_byimage, pixel_div)
     write_pixel_div_to_file(save_fld, pixel_div)
 
     # ----------------------------------------------------------------------------
