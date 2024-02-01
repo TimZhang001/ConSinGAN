@@ -41,7 +41,7 @@ if __name__ == '__main__':
         target_path = os.path.join(mvtectAD, target, "test")
         file_names  = os.listdir(target_path)
         for file_name in file_names:
-            if file_name in ['good']:
+            if file_name not in ['squeezed_teeth']:
                 continue
 
             opt.input_name = os.path.join(target_path, file_name, "000.png")
